@@ -19,12 +19,18 @@ Raw samples are in `payloads/` (paths anonymised, long text trimmed).
 4. A new phase does not clear Claude's task list (old completed tasks stay in the session). On a phase change the
    hook hides tasks that were already completed, so Phase 2 does not open at "6/11".
 
-## Not yet verified with a real capture
+## Notification (captured 2026-11-17 from an interactive session)
 
-`Notification` payloads. Headless (`claude -p`) sessions never show a permission dialog, so this needs an
-interactive run on Windows. The hook prefers `notification_type` (`permission_prompt`, `idle_prompt`,
-`elicitation_dialog`) and falls back to matching "permission" / "waiting" in `message`.
-To capture one: set `RAFTAAR_HOME`, trigger a permission prompt, and look at `sessions/<id>.json`.
+```json
+{ "hook_event_name": "Notification", "message": "Claude needs your permission", "notification_type": "permission_prompt" }
+```
+
+- `notification_type` exists, so the hook uses it first (`permission_prompt`, `idle_prompt`, `elicitation_dialog`)
+  and only falls back to matching text in `message` when it is missing.
+- **The message does not name the tool** (the spec expected "...permission to use Bash"). The widget takes the
+  tool name from `runningTool`, which `PreToolUse` set just before the prompt.
+- The event arrived about 6 s after `PreToolUse`: Claude Code waits a moment before it notifies. The hook
+  itself adds about 40 ms, so the widget turns amber well within 1 s of the notification.
 
 ## Token cost of the meter
 
@@ -35,6 +41,6 @@ The only token cost is Claude's own task calls plus the CLAUDE.md snippet:
 | Run | Task tool calls per task |
 |---|---|
 | Phase 0, no guidance (create, in_progress, completed) | 3 |
-| With Raftaar's snippet (create, completed) | 2 |
+| With Needle's snippet (create, completed) | 2 |
 
 The hook infers "current task" from the next pending one, so `in_progress` calls are unnecessary.

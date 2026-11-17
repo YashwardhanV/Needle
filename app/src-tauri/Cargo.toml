@@ -1,8 +1,10 @@
 [package]
-name = "raftaar"
+name = "needle"
 version = "0.1.0"
 edition = "2021"
 description = "Progress speedometer for Claude Code"
+license = "Apache-2.0"
+authors = ["Yashwardhan Verma"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

@@ -1,0 +1,10 @@
+{
+  "session_id": "9d4dfa5e-d7b6-472e-a2c6-35c88339df30",
+  "transcript_path": "/home/you/.claude/projects/-home-you-code-demo/9d4dfa5e-d7b6-472e-a2c6-35c88339df30.jsonl",
+  "cwd": "/home/you/code/demo",
+  "scratchpad_dir": "/home/you/.scratch",
+  "prompt_id": "40b0af9f-de88-4f74-aeb6-ae304fd4f6f6",
+  "hook_event_name": "Notification",
+  "message": "Claude needs your permission",
+  "notification_type": "permission_prompt"
+}

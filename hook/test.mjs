@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { reduce, handle } from './raftaar-hook.mjs';
+import { reduce, handle } from './needle-hook.mjs';
 import { addHooks, removeHooks } from './install.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -67,19 +67,26 @@ test('notifications and permission flow', () => {
   assert.equal(s.state, 'waiting_input');
 });
 
-test('raftaar.json totalPhases and planFile', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'raftaar-proj-'));
+test('real permission_prompt notification (no tool name in message)', () => {
+  const s = run([ev('PreToolUse', { tool_name: 'Bash' }), { ...payload('Notification-permission_prompt'), session_id: 's1' }]);
+  assert.equal(s.state, 'needs_permission');
+  assert.equal(s.message, 'Claude needs your permission');
+  assert.equal(s.runningTool.name, 'Bash'); // the widget names the tool from here
+});
+
+test('needle.json totalPhases and planFile', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'needle-proj-'));
   fs.writeFileSync(path.join(dir, 'PHASES.md'), '# Plan\n## Phase 0\n## Phase 1\n## Phase 2\n');
-  fs.writeFileSync(path.join(dir, 'raftaar.json'), '{"planFile":"PHASES.md"}');
+  fs.writeFileSync(path.join(dir, 'needle.json'), '{"planFile":"PHASES.md"}');
   assert.equal(reduce(null, { session_id: 's', cwd: dir, hook_event_name: 'SessionStart' }).phase.total, 3);
-  fs.writeFileSync(path.join(dir, 'raftaar.json'), '{"totalPhases":5}');
+  fs.writeFileSync(path.join(dir, 'needle.json'), '{"totalPhases":5}');
   assert.equal(reduce(null, { session_id: 's', cwd: dir, hook_event_name: 'SessionStart' }).phase.total, 5);
 });
 
 test('process: silent, exit 0 on garbage, fast, writes atomically', () => {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'raftaar-home-'));
-  const env = { ...process.env, RAFTAAR_HOME: home };
-  const hook = path.join(here, 'raftaar-hook.mjs');
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'needle-home-'));
+  const env = { ...process.env, NEEDLE_HOME: home };
+  const hook = path.join(here, 'needle-hook.mjs');
   const bad = spawnSync('node', [hook], { input: 'not json', env });
   assert.equal(bad.status, 0);
   assert.equal(bad.stdout.length, 0);
@@ -99,17 +106,17 @@ test('process: silent, exit 0 on garbage, fast, writes atomically', () => {
 
 test('installer merges, never duplicates, and uninstalls cleanly', () => {
   const original = { model: 'x', hooks: { Stop: [{ hooks: [{ type: 'command', command: 'say done' }] }] } };
-  const once = addHooks(structuredClone(original), '/h/raftaar-hook.mjs');
-  const twice = addHooks(structuredClone(once), '/h/raftaar-hook.mjs');
+  const once = addHooks(structuredClone(original), '/h/needle-hook.mjs');
+  const twice = addHooks(structuredClone(once), '/h/needle-hook.mjs');
   assert.deepEqual(once, twice);
   assert.equal(once.hooks.Stop.length, 2);
   assert.equal(once.hooks.PreToolUse[0].matcher, '*');
   assert.deepEqual(removeHooks(twice), original);
-  assert.deepEqual(removeHooks(addHooks({}, '/h/raftaar-hook.mjs')), {});
+  assert.deepEqual(removeHooks(addHooks({}, '/h/needle-hook.mjs')), {});
 });
 
 test('install CLI end to end with CLAUDE.md snippet', () => {
-  const cfg = fs.mkdtempSync(path.join(os.tmpdir(), 'raftaar-claude-'));
+  const cfg = fs.mkdtempSync(path.join(os.tmpdir(), 'needle-claude-'));
   fs.writeFileSync(path.join(cfg, 'settings.json'), '{"theme":"dark"}');
   fs.writeFileSync(path.join(cfg, 'CLAUDE.md'), '# Mine\n');
   const env = { ...process.env, CLAUDE_CONFIG_DIR: cfg };
@@ -117,8 +124,8 @@ test('install CLI end to end with CLAUDE.md snippet', () => {
   execFileSync('node', [cli, 'install', '--claude-md'], { env });
   execFileSync('node', [cli, 'install', '--claude-md'], { env });
   const md = fs.readFileSync(path.join(cfg, 'CLAUDE.md'), 'utf8');
-  assert.equal(md.match(/raftaar:start/g).length, 1);
-  assert.ok(fs.existsSync(path.join(cfg, 'settings.json.raftaar-backup')));
+  assert.equal(md.match(/needle:start/g).length, 1);
+  assert.ok(fs.existsSync(path.join(cfg, 'settings.json.needle-backup')));
   execFileSync('node', [cli, 'uninstall'], { env });
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(cfg, 'settings.json'), 'utf8')), { theme: 'dark' });
   assert.equal(fs.readFileSync(path.join(cfg, 'CLAUDE.md'), 'utf8').trim(), '# Mine');

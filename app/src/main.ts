@@ -69,7 +69,7 @@ function render() {
 
   if (!s) {
     widget.dataset.state = 'idle';
-    $('project').textContent = 'Raftaar';
+    $('project').textContent = 'Needle';
     $('counts').textContent = 'No active session';
     $('badge').hidden = true;
     $('status').textContent = 'Idle';
@@ -117,7 +117,7 @@ async function toast(s: Session) {
   const n = await import('@tauri-apps/plugin-notification');
   let ok = await n.isPermissionGranted();
   if (!ok) ok = (await n.requestPermission()) === 'granted';
-  if (ok) n.sendNotification({ title: `Raftaar · ${s.project ?? 'Claude Code'}`, body: s.message ?? 'Claude needs your permission' });
+  if (ok) n.sendNotification({ title: `Needle · ${s.project ?? 'Claude Code'}`, body: s.message ?? 'Claude needs your permission' });
 }
 
 async function applyConfig(save: boolean) {
@@ -180,7 +180,7 @@ function demo() {
   });
   void onSessions([
     mk('a', 'pagdandi', (q.get('state') as StateName) || 'working', Number(q.get('done') ?? 6), Number(q.get('total') ?? 12), Number(q.get('added') ?? 2)),
-    mk('b', 'raftaar', 'idle', 1, 4),
+    mk('b', 'needle', 'idle', 1, 4),
   ]);
 }
 

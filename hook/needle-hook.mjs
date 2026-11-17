@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Raftaar hook. Claude Code runs this on lifecycle events; it reads the event
+// Needle hook. Claude Code runs this on lifecycle events; it reads the event
 // JSON from stdin and updates one state file per session.
 //
 // Hard rules: never print to stdout (stdout from some hooks is injected into
@@ -12,12 +12,12 @@ import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 export function baseDir(env = process.env) {
-  if (env.RAFTAAR_HOME) return env.RAFTAAR_HOME;
+  if (env.NEEDLE_HOME) return env.NEEDLE_HOME;
   if (process.platform === 'win32') {
-    return path.join(env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'), 'Raftaar');
+    return path.join(env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'), 'Needle');
   }
-  if (process.platform === 'darwin') return path.join(os.homedir(), 'Library', 'Application Support', 'Raftaar');
-  return path.join(env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share'), 'raftaar');
+  if (process.platform === 'darwin') return path.join(os.homedir(), 'Library', 'Application Support', 'Needle');
+  return path.join(env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share'), 'needle');
 }
 
 const PHASE_RE = /phase\s*(\d+)/i;
@@ -77,10 +77,10 @@ export function newState(ev) {
   };
 }
 
-// Optional raftaar.json in the project root: { totalPhases } or { planFile }.
+// Optional needle.json in the project root: { totalPhases } or { planFile }.
 export function readTotalPhases(cwd) {
   if (!cwd) return null;
-  const cfg = readJson(path.join(cwd, 'raftaar.json'));
+  const cfg = readJson(path.join(cwd, 'needle.json'));
   if (!cfg) return null;
   if (Number.isInteger(cfg.totalPhases)) return cfg.totalPhases;
   if (typeof cfg.planFile === 'string') {

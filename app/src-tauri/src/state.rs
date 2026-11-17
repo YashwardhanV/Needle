@@ -1,4 +1,4 @@
-//! Paths, user config and session-file reading. Must agree with hook/raftaar-hook.mjs.
+//! Paths, user config and session-file reading. Must agree with hook/needle-hook.mjs.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -7,10 +7,10 @@ use std::{fs, path::PathBuf, time::{Duration, SystemTime}};
 const MAX_AGE: Duration = Duration::from_secs(24 * 60 * 60);
 
 pub fn base_dir() -> PathBuf {
-    if let Some(p) = std::env::var_os("RAFTAAR_HOME") {
+    if let Some(p) = std::env::var_os("NEEDLE_HOME") {
         return PathBuf::from(p);
     }
-    let name = if cfg!(target_os = "linux") { "raftaar" } else { "Raftaar" };
+    let name = if cfg!(target_os = "linux") { "needle" } else { "Needle" };
     dirs::data_local_dir().unwrap_or_else(std::env::temp_dir).join(name)
 }
 
@@ -19,7 +19,7 @@ pub fn sessions_dir() -> PathBuf {
 }
 
 fn config_path() -> PathBuf {
-    let name = if cfg!(target_os = "linux") { "raftaar" } else { "Raftaar" };
+    let name = if cfg!(target_os = "linux") { "needle" } else { "Needle" };
     dirs::config_dir().unwrap_or_else(base_dir).join(name).join("config.json")
 }
 

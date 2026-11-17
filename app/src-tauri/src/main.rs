@@ -116,5 +116,5 @@ fn main() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("error while running Raftaar");
+        .expect("error while running Needle");
 }

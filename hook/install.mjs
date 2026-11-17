@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Usage: node hook/install.mjs install [--claude-md] | uninstall | status
-// Merges Raftaar's hook entries into ~/.claude/settings.json (backing it up
+// Merges Needle's hook entries into ~/.claude/settings.json (backing it up
 // first), keeps every existing hook, never duplicates, and creates no startup
 // entries of any kind.
 
@@ -9,18 +9,18 @@ import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 
-const HOOK = path.join(path.dirname(fileURLToPath(import.meta.url)), 'raftaar-hook.mjs');
-const MARK = 'raftaar-hook.mjs';
+const HOOK = path.join(path.dirname(fileURLToPath(import.meta.url)), 'needle-hook.mjs');
+const MARK = 'needle-hook.mjs';
 const EVENTS = ['SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Notification', 'Stop', 'SessionEnd'];
 const WITH_MATCHER = new Set(['PreToolUse', 'PostToolUse']);
 
 // Kept deliberately short: CLAUDE.md is re-read every turn, so every word here
 // is paid for again and again. One update per finished task, no in_progress
 // calls (the hook infers the current task from the next pending one).
-export const CLAUDE_MD = `<!-- raftaar:start -->
+export const CLAUDE_MD = `<!-- needle:start -->
 ## Progress tracking
 At the start of each phase, create one task per deliverable (aim for 4-8, not micro-steps). Mark a task completed right after finishing it; skip in_progress updates and TaskList calls. Add newly discovered work as a new task.
-<!-- raftaar:end -->`;
+<!-- needle:end -->`;
 
 const claudeDir = (env = process.env) => env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
 const isOurs = (h) => typeof h?.command === 'string' && h.command.includes(MARK);
@@ -51,7 +51,7 @@ export function removeHooks(settings) {
   return settings;
 }
 
-const stripSnippet = (text) => text.replace(/\n*<!-- raftaar:start -->[\s\S]*?<!-- raftaar:end -->\n*/g, '\n').replace(/^\n+/, '');
+const stripSnippet = (text) => text.replace(/\n*<!-- needle:start -->[\s\S]*?<!-- needle:end -->\n*/g, '\n').replace(/^\n+/, '');
 
 function main(argv) {
   const [cmd = 'status', ...flags] = argv;
@@ -66,9 +66,9 @@ function main(argv) {
 
   if (cmd === 'install') {
     const settings = read();
-    if (fs.existsSync(file)) fs.copyFileSync(file, `${file}.raftaar-backup`);
+    if (fs.existsSync(file)) fs.copyFileSync(file, `${file}.needle-backup`);
     write(addHooks(settings));
-    console.log(`Raftaar hooks installed in ${file}`);
+    console.log(`Needle hooks installed in ${file}`);
     if (flags.includes('--claude-md')) {
       const old = fs.existsSync(mdFile) ? stripSnippet(fs.readFileSync(mdFile, 'utf8')) : '';
       fs.writeFileSync(mdFile, (old.trimEnd() ? old.trimEnd() + '\n\n' : '') + CLAUDE_MD + '\n');
@@ -79,9 +79,9 @@ function main(argv) {
     if (fs.existsSync(file)) write(removeHooks(read()));
     if (fs.existsSync(mdFile)) {
       const text = fs.readFileSync(mdFile, 'utf8');
-      if (text.includes('raftaar:start')) fs.writeFileSync(mdFile, stripSnippet(text));
+      if (text.includes('needle:start')) fs.writeFileSync(mdFile, stripSnippet(text));
     }
-    console.log('Raftaar hooks and snippet removed.');
+    console.log('Needle hooks and snippet removed.');
   } else if (cmd === 'status') {
     const s = read();
     const on = EVENTS.filter((ev) => (s.hooks?.[ev] || []).some((g) => (g.hooks || []).some(isOurs)));
